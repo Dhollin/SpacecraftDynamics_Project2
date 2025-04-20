@@ -499,14 +499,11 @@ Lgnd.Layout.Tile = 4;
 
 %% Functions
 
-% Full dynamics including control law
-function [prime] = full_dyn(x,J,Iw,D,K,goal)
-    
-    % hw_dot = hw/ts;
-    % ww_dot = hw_dot/Iw;
-    % ww_dot = [0;0;ww_dot];
+% Full dynamics including Lyapunov control law
+function [prime] = full_dyn(x,J,Iw,D,K,goal)    
     sig = x(1:3);
     sig2 = sig'*sig;
+    % Calculate and switch to shadow MRP if necessary
     if sig2 > 1
         sig = -sig./sig2;
     end
@@ -516,25 +513,27 @@ function [prime] = full_dyn(x,J,Iw,D,K,goal)
     w = x(4:6);
     ww = x(7:9);
     
+    % Inertia matrix for RWs
     Iww = [Iw,0,0;0,Iw,0;0,0,Iw];
-
+    % Torque calculation using predefined gains
     u = -K*sig_e + D*w + skew(w)*J*w;
-
+    % Angular acceleration of RWs
     ww_dot = inv(Iww)*(skew(ww)*Iww*ww+u);
-    
+    % Angular acceleration of the spacecraft
     wdot = J\(-skew(w)*J*w-skew(w)*Iww*ww-Iww*ww_dot);
-
+    % Attitude acceleration of the spacecraft
     sig_dot = 0.25*((1-sig2)*eye(3) + 2*skew(sig) + 2*sig*sig')*w;
-
+    % Propogate solution
     prime = [sig_dot;wdot;ww_dot];   
 end
 
 % Full dynamics using linear control law
-function [prime,u] = lin_dyn(x,J,Iw,goal)
-    
+function [prime,u] = lin_dyn(x,J,Iw,goal)    
+    % Calculate gains using current state
     K = gain(x(1:6));
     sig = x(1:3);
     sig2 = sig'*sig;
+    % Calculate and switch to shadow MRP if necessary
     if sig2 > 1
         sig = -sig./sig2;
     end
@@ -543,18 +542,20 @@ function [prime,u] = lin_dyn(x,J,Iw,goal)
 
     w = x(4:6);
     ww = x(7:9);
-    
+
+    % Inertia matrix for RWs
     Iww = [Iw,0,0;0,Iw,0;0,0,Iw];
-
+    % Torque calculation using LQR gains
     u = K*x(1:6);
-
+    % Angular acceleration of RWs
     ww_dot = inv(Iww)*(skew(ww)*Iww*ww+u);
-    
+    % Angular acceleration of the spacecraft
     wdot = J\(-skew(w)*J*w-skew(w)*Iww*ww-Iww*ww_dot);
-
+    % Attitude acceleration of the spacecraft
     sig_dot = 0.25*((1-sig2)*eye(3) + 2*skew(sig) + 2*sig*sig')*w;
+    % Propogate solution
+    prime = [sig_dot;wdot;ww_dot];  
 
-    prime = [sig_dot;wdot;ww_dot];   
     % Function to assemble skew matrix from a vector
     function M = skew(s)
         M = [0,-s(3),s(2); s(3),0,-s(1); -s(2),s(1),0];
@@ -562,14 +563,16 @@ function [prime,u] = lin_dyn(x,J,Iw,goal)
     % Function to calculate gains using LQR
     function K = gain(x)
         sig_ = x(1:3);
+        % Calculate and switch to shadow MRP if necessary
         sig2_ = sig_'*sig_;
         if sig2_ > 1
             sig_ = -sig_./sig2_;
         end
-    
+        
         w_ = x(4:6);
         Iw_ = 0.1;
         J_ = [500,400,440];
+        % Calculate linear coefficients for state variables
         sd = (1-sig2_)*eye(3) + 2*skew(sig_) + 2*sig_*sig_';
         w_var = diag(J_)\(-skew(w_)*diag(J_));
         A = [0,0,0,0.25*sd(1,1),0.25*sd(1,2),0.25*sd(1,3);
@@ -579,13 +582,15 @@ function [prime,u] = lin_dyn(x,J,Iw,goal)
              0,0,0,w_var(2,1),w_var(2,2),w_var(2,3);
              0,0,0,w_var(3,1),w_var(3,2),w_var(3,3)];
 
-
+        % Calculate linear coefficients for input variables
         B = zeros(6,3);        
         B(4,1) = Iw_/J_(1);B(5,2) = Iw_/J_(2);B(6,3) = Iw_/J_(3);
-
+        
+        % Weights for each state variable and input
         Q = diag([500,500,500,2,2,2]);
         R = diag([0.00001,0.00001,0.00001]);
-
+        
+        % Calculate gain matrix using LQR
         [K,~,~] = lqr(A,B,Q,R);
 
     end
