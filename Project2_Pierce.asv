@@ -237,17 +237,17 @@ title(tcl,'Time Histories of Angular Velocities')
 nexttile(tcl)
 hold on;
 plot(times{3},states{3}(:,4));
-ylabel('W1',"Interpreter","latex","FontWeight","Bold")
+ylabel('w1',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 nexttile(tcl)
 hold on;
 plot(times{3},states{3}(:,5));
-ylabel('W2',"Interpreter","latex","FontWeight","Bold")
+ylabel('w2',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 nexttile(tcl)
 hold on;
 plot(times{3},states{3}(:,6));
-ylabel('W3',"Interpreter","latex","FontWeight","Bold")
+ylabel('w3',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 
 % Plot the angular velocity of the RWs for the chosen gains
@@ -256,22 +256,20 @@ tcl = tiledlayout(3,1);
 title(tcl,'Time Histories of Angular Velocities')
 nexttile(tcl)
 hold on;
-plot(times{3},states{3}(:,7).*60./2./pi);
-ylabel('$W_w1$ (RPM)',"Interpreter","latex","FontWeight","Bold")
+plot(times{3},states{3}(:,7).*60./2./);
+ylabel('w1',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 nexttile(tcl)
 hold on;
-plot(times{3},states{3}(:,8).*60./2./pi);
-ylabel('$W_w2$ (RPM)',"Interpreter","latex","FontWeight","Bold")
+plot(times{3},states{3}(:,8));
+ylabel('w2',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 nexttile(tcl)
 hold on;
-plot(times{3},states{3}(:,9).*60./2./pi);
-ylabel('$W_w3$ (RPM)',"Interpreter","latex","FontWeight","Bold")
+plot(times{3},states{3}(:,9));
+ylabel('w3',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 
-% Calculate the norm errors for the both the attitude and angular
-% velocities
 goal = [0;0;0];
 s_e = [];
 w_e = [];
