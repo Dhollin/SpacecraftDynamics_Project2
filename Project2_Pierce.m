@@ -1,7 +1,5 @@
-%% Project 2 - Pierce Elliott
+%% Project 2 - Team 4
 clear; clc; close all;
-
-
 
 %% Question 3.1
 
@@ -25,6 +23,7 @@ nutation_angle = nutation(J,Iww,y,[0,0,1]);
 % Plot angular velocities of the satellite and the nutation angle
 figure(1);
 tcl = tiledlayout(4,1);
+title(tcl,'Time Histories of Angular Velocities and Nutation Angle')
 nexttile(tcl)
 hold on;
 plot(t,y(:,1));
@@ -46,6 +45,7 @@ xlabel('Time (s)',"FontWeight","Bold")
 % Plot 3D angular velocities
 figure(2)
 plot3(y(:,1),y(:,2),y(:,3));
+title('3D Angular Velocities')
 xlabel('W1 (rad/s)'); ylabel('W2 (rad/s)'); zlabel('W3 (rad/s)')
 grid on;
 
@@ -80,6 +80,7 @@ nutation_angle = nutation(J,Iww,y,[0,0,1]);
 % Plot angular velocities of the satellite and the nutation angle
 figure(3);
 tcl = tiledlayout(4,1);
+title(tcl,'Time Histories of Angular Velocities and Nutation Angle')
 nexttile(tcl)
 hold on;
 plot(t,y(:,1));
@@ -101,6 +102,7 @@ xlabel('Time (s)',"FontWeight","Bold")
 % Plot 3D angular velocities
 figure(4)
 plot3(y(:,1),y(:,2),y(:,3));
+title('3D Angular Velocities')
 xlabel('W1 (rad/s)'); ylabel('W2 (rad/s)'); zlabel('W3 (rad/s)')
 grid on;
 
@@ -253,7 +255,7 @@ xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 % Plot the angular velocity of the RWs for the chosen gains
 figure(16);
 tcl = tiledlayout(3,1);
-title(tcl,'Time Histories of Angular Velocities')
+title(tcl,'Time Histories of Reaction Wheel Speed')
 nexttile(tcl)
 hold on;
 plot(times{3},states{3}(:,7).*60./2./pi);
@@ -271,16 +273,20 @@ ylabel('$W_w3$ (RPM)',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 
 % Calculate the norm errors for the both the attitude and angular
-% velocities
+% velocities, and the torque at each step
 goal = [0;0;0];
 s_e = [];
 w_e = [];
+u = []; K = 1000; D = diag([700,700,700]);
+J = [500,0,0;0,400,-7;0,-7,440];
 for i = 1:length(states{3}(:,1))
-    sig = states{3}(i,1:3);
+    sig = states{3}(i,1:3)';
     sig_e = ((1-norm(sig)^2)*goal - (1-norm(goal)^2)*sig + cross(2*goal,sig))...
             /(1+norm(sig)^2*norm(goal)^2 - 2*dot(sig,goal));
     s_e(i) = norm(sig_e);
     w_e(i) = norm(states{3}(i,4:6));
+    w = states{3}(i,4:6)';
+    u(i,:) = (-K*sig_e + D*w + skew(w)*J*w)';
 end
 
 % Plot the angular velocity history for the chosen gains
@@ -298,31 +304,28 @@ yline(10^-5);
 ylabel('Angular Velocity Error Norm')
 xlabel('Time (s)')
 
+% Plot the angular velocity of the RWs for the chosen gains
+figure(17);
+tcl = tiledlayout(3,1);
+title(tcl,'Time Histories of Reaction Wheel Torque')
+nexttile(tcl)
+hold on;
+plot(times{3},u(:,1));
+ylabel('U1 (Nm)',"Interpreter","latex","FontWeight","Bold")
+xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
+nexttile(tcl)
+hold on;
+plot(times{3},u(:,2));
+ylabel('U1 (Nm)',"Interpreter","latex","FontWeight","Bold")
+xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
+nexttile(tcl)
+hold on;
+plot(times{3},u(:,3));
+ylabel('U1 (Nm)',"Interpreter","latex","FontWeight","Bold")
+xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
+
 
 %% Question 5.3
-Iw = 0.1;
-J = [500,400,440];
-A = [0,0,0,0.25,0,0,0,0,0;
-     0,0,0,0,0.25,0,0,0,0;
-     0,0,0,0,0,0.25,0,0,0;
-     0,0,0,0,0,0,-Iw/J(1),0,0;
-     0,0,0,0,0,0,0,-Iw/J(2),0;
-     0,0,0,0,0,0,0,0,-Iw/J(3);
-     0,0,0,0,0,0,0,0,0;
-     0,0,0,0,0,0,0,0,0;
-     0,0,0,0,0,0,0,0,0];
-
-B = zeros(9,3);
-B(7,1) = 1/Iw;B(8,2) = 1/Iw;B(9,3) = 1/Iw;
-
-C = diag([1,1,1,1,1,1,1,1,1]);
-
-D = zeros(9,3);
-
-Q = diag([5,5,5,2,2,2,0,0,0]);
-R = diag([0.1,0.1,0.1]);
-
-[K,S,P] = lqr(A,B,Q,R);
 
 Iw = 0.1; %kg*m^2
 mrp = DCM2MRPs(C_BN_quest);
@@ -330,49 +333,169 @@ initial = [mrp;y2(end,:)'];
 opts = odeset('MaxStep',2);
 J = [500,0,0;0,400,-7;0,-7,440];
 mrp = [0;0;0];
-[t,s] = ode45(@(t,w) lin_dyn(w,J,Iw,K,mrp),[0,50],initial,opts);
+[t,s] = ode45(@(t,w) lin_dyn(w,J,Iw,mrp),[0,50],initial,opts);
 
 figure(7);
-tcl = tiledlayout(3,1);
-
+tcl = tiledlayout(4,1);
+title(tcl,'Time Histories of MRPs')
 nexttile(tcl)
 hold on;
 plot(t,s(:,1));
+plot(times{3},states{3}(:,1));
 ylabel('$\sigma _1$',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
-
 nexttile(tcl)
 hold on;
 plot(t,s(:,2));
+plot(times{3},states{3}(:,2));
 ylabel('$\sigma _2$',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
-
 nexttile(tcl)
 hold on;
 plot(t,s(:,3));
+plot(times{3},states{3}(:,3));
 ylabel('$\sigma _3$',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
+Lgnd = legend('Adaptive LQR', 'Lyapunov');
+Lgnd.Layout.Tile = 4;
+
 
 figure(8);
-tcl = tiledlayout(3,1);
-
+tcl = tiledlayout(4,1);
+title(tcl,'Time Histories of Angular Velocities')
 nexttile(tcl)
 hold on;
 plot(t,s(:,4));
-ylabel('w1',"Interpreter","latex","FontWeight","Bold")
+plot(times{3},states{3}(:,4));
+ylabel('W1 (rad/s)',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
-
 nexttile(tcl)
 hold on;
 plot(t,s(:,5));
-ylabel('w2',"Interpreter","latex","FontWeight","Bold")
+plot(times{3},states{3}(:,5));
+ylabel('W2 (rad/s)',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
-
 nexttile(tcl)
 hold on;
 plot(t,s(:,6));
-ylabel('w3',"Interpreter","latex","FontWeight","Bold")
+plot(times{3},states{3}(:,6));
+ylabel('W3 (rad/s)',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
+Lgnd = legend('Adaptive LQR', 'Lyapunov');
+Lgnd.Layout.Tile = 4;
+
+% Plot the angular velocity of the RWs for the chosen gains
+figure(20);
+tcl = tiledlayout(4,1);
+title(tcl,'Time Histories of Reaction Wheel Speed')
+nexttile(tcl)
+hold on;
+plot(t,s(:,7).*60./2./pi);
+plot(times{3},states{3}(:,7).*60./2./pi);
+ylabel('$W_w1$ (RPM)',"Interpreter","latex","FontWeight","Bold")
+xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
+nexttile(tcl)
+hold on;
+plot(t,s(:,8).*60./2./pi);
+plot(times{3},states{3}(:,8).*60./2./pi);
+ylabel('$W_w2$ (RPM)',"Interpreter","latex","FontWeight","Bold")
+xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
+nexttile(tcl)
+hold on;
+plot(t,s(:,9).*60./2./pi);
+plot(times{3},states{3}(:,9).*60./2./pi);
+ylabel('$W_w3$ (RPM)',"Interpreter","latex","FontWeight","Bold")
+xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
+Lgnd = legend('Adaptive LQR', 'Lyapunov');
+Lgnd.Layout.Tile = 4;
+
+% Calculate the norm errors for the both the attitude and angular
+% velocities, and the torque at each step
+goal = [0;0;0];
+s_e2 = [];
+w_e2 = [];
+u2 = []; K = 1000; D = diag([700,700,700]);
+J = [500,0,0;0,400,-7;0,-7,440];
+for i = 1:length(s(:,1))
+    sig = s(i,1:3)';
+    sig_e = ((1-norm(sig)^2)*goal - (1-norm(goal)^2)*sig + cross(2*goal,sig))...
+            /(1+norm(sig)^2*norm(goal)^2 - 2*dot(sig,goal));
+    s_e2(i) = norm(sig_e);
+    w_e2(i) = norm(s(i,4:6));
+    w = s(i,4:6)';
+    [~,temp_u] = lin_dyn([sig;w;s(i,7:9)'],J,Iw,[0;0;0]);
+    u2(i,:) = temp_u';
+end
+
+% Plot the angular velocity history for the chosen gains
+figure(21);
+tcl = tiledlayout(3,1);
+title(tcl,'Time Histories of Orientation Errors')
+nexttile(tcl)
+semilogy(t,s_e2); hold on;
+semilogy(times{3},s_e);
+yline(10^-5);
+ylabel('MRP Error Norm')
+xlabel('Time (s)')
+nexttile(tcl)
+semilogy(t,w_e2); hold on;
+semilogy(times{3},w_e);
+yline(10^-5);
+ylabel('Angular Velocity Error Norm')
+xlabel('Time (s)')
+Lgnd = legend('Adaptive LQR', 'Lyapunov');
+Lgnd.Layout.Tile = 4;
+
+% Plot the angular velocity of the RWs for the chosen gains
+figure(22);
+tcl = tiledlayout(4,1);
+title(tcl,'Time Histories of Reaction Wheel Torque')
+nexttile(tcl)
+plot(t,u2(:,1)); hold on;
+plot(times{3},u(:,1));
+ylabel('U1 (Nm)',"Interpreter","latex","FontWeight","Bold")
+xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
+nexttile(tcl)
+hold on;
+plot(t,u2(:,2)); hold on;
+plot(times{3},u(:,2));
+ylabel('U1 (Nm)',"Interpreter","latex","FontWeight","Bold")
+xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
+nexttile(tcl)
+hold on;
+plot(t,u2(:,3)); hold on;
+plot(times{3},u(:,3));
+ylabel('U1 (Nm)',"Interpreter","latex","FontWeight","Bold")
+xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
+Lgnd = legend('Adaptive LQR', 'Lyapunov');
+Lgnd.Layout.Tile = 4;
+
+% Plot the angular velocity of the RWs for the chosen gains
+figure(23);
+tcl = tiledlayout(4,1);
+title(tcl,'Time Histories of Reaction Wheel Torque')
+nexttile(tcl)
+plot(t,u2(:,1)); hold on;
+plot(times{3},u(:,1));
+ylabel('U1 (Nm)',"Interpreter","latex","FontWeight","Bold")
+xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
+xlim([0,5])
+nexttile(tcl)
+hold on;
+plot(t,u2(:,2)); hold on;
+plot(times{3},u(:,2));
+ylabel('U1 (Nm)',"Interpreter","latex","FontWeight","Bold")
+xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
+xlim([0,5])
+nexttile(tcl)
+hold on;
+plot(t,u2(:,3)); hold on;
+plot(times{3},u(:,3));
+ylabel('U1 (Nm)',"Interpreter","latex","FontWeight","Bold")
+xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
+xlim([0,5])
+Lgnd = legend('Adaptive LQR', 'Lyapunov');
+Lgnd.Layout.Tile = 4;
 
 %% Functions
 
@@ -407,7 +530,7 @@ function [prime] = full_dyn(x,J,Iw,D,K,goal)
 end
 
 % Full dynamics using linear control law
-function [prime] = lin_dyn(x,J,Iw,K,goal)
+function [prime,u] = lin_dyn(x,J,Iw,goal)
     
     K = gain(x(1:6));
     sig = x(1:3);
@@ -426,8 +549,6 @@ function [prime] = lin_dyn(x,J,Iw,K,goal)
     u = K*x(1:6);
 
     ww_dot = inv(Iww)*(skew(ww)*Iww*ww+u);
-
-    % ww_ddot = [0;0;0];
     
     wdot = J\(-skew(w)*J*w-skew(w)*Iww*ww-Iww*ww_dot);
 
@@ -438,22 +559,19 @@ function [prime] = lin_dyn(x,J,Iw,K,goal)
     function M = skew(s)
         M = [0,-s(3),s(2); s(3),0,-s(1); -s(2),s(1),0];
     end
+    % Function to calculate gains using LQR
     function K = gain(x)
         sig_ = x(1:3);
         sig2_ = sig_'*sig_;
         if sig2_ > 1
             sig_ = -sig_./sig2_;
         end
-        % sig_e_ = ((1-norm(sig_)^2)*goal_ - (1-norm(goal)^2)*sig + cross(2*goal,sig))...
-        %         /(1+norm(sig)^2*norm(goal)^2 - 2*dot(sig,goal));
     
         w_ = x(4:6);
-        % ww_ = x(7:9);
         Iw_ = 0.1;
         J_ = [500,400,440];
         sd = (1-sig2_)*eye(3) + 2*skew(sig_) + 2*sig_*sig_';
         w_var = diag(J_)\(-skew(w_)*diag(J_));
-        % w_var2 = diag(J_)\(-skew(w_)*diag([Iw_,Iw_,Iw_]));
         A = [0,0,0,0.25*sd(1,1),0.25*sd(1,2),0.25*sd(1,3);
              0,0,0,0.25*sd(2,1),0.25*sd(2,2),0.25*sd(2,3);
              0,0,0,0.25*sd(3,1),0.25*sd(3,2),0.25*sd(3,3);             
@@ -493,6 +611,7 @@ function M = skew(s)
     M = [0,-s(3),s(2); s(3),0,-s(1); -s(2),s(1),0];
 end
 
+% Calculate the nutation angle
 function angle = nutation(J,Iw,w,control)
     for i = 1:length(w(:,1))
         H(i,:) = (J*w(i,1:3)' + Iw*w(i,4:6)')';
@@ -569,6 +688,7 @@ function angle = PR(C)
     angle = acosd(0.5*(trace(C)-1));
 end
 
+% Convert DCM to MRP
 function mrp = DCM2MRPs(DCM)
     c = sqrt(trace(DCM)+1);
     mrp = 1/(c*(c+2)) *[DCM(2,3)-DCM(3,2);DCM(3,1)-DCM(1,3);DCM(1,2)-DCM(2,1)];
