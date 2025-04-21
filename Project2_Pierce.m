@@ -39,8 +39,8 @@ ylabel('W3 (Rad/s)',"Interpreter","latex","FontWeight","Bold")
 nexttile(tcl)
 hold on;
 plot(t,nutation_angle);
-ylabel('Nutation Angle (deg)',"FontWeight","Bold")
-xlabel('Time (s)',"FontWeight","Bold")
+ylabel('Nutation Angle (deg)')
+xlabel('Time (s)')
 
 % Plot 3D angular velocities
 figure(2)
@@ -96,8 +96,8 @@ ylabel('W3 (Rad/s)',"Interpreter","latex","FontWeight","Bold")
 nexttile(tcl)
 hold on;
 plot(t,nutation_angle);
-ylabel('Nutation Angle (deg)',"FontWeight","Bold")
-xlabel('Time (s)',"FontWeight","Bold")
+ylabel('Nutation Angle (deg)')
+xlabel('Time (s)')
 
 % Plot 3D angular velocities
 figure(4)
@@ -239,17 +239,17 @@ title(tcl,'Time Histories of Angular Velocities')
 nexttile(tcl)
 hold on;
 plot(times{3},states{3}(:,4));
-ylabel('W1',"Interpreter","latex","FontWeight","Bold")
+ylabel('W1 (Rad/s)',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 nexttile(tcl)
 hold on;
 plot(times{3},states{3}(:,5));
-ylabel('W2',"Interpreter","latex","FontWeight","Bold")
+ylabel('W2 (Rad/s)',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 nexttile(tcl)
 hold on;
 plot(times{3},states{3}(:,6));
-ylabel('W3',"Interpreter","latex","FontWeight","Bold")
+ylabel('W3 (Rad/s)',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 
 % Plot the angular velocity of the RWs for the chosen gains
@@ -316,12 +316,12 @@ xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 nexttile(tcl)
 hold on;
 plot(times{3},u(:,2));
-ylabel('U1 (Nm)',"Interpreter","latex","FontWeight","Bold")
+ylabel('U2 (Nm)',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 nexttile(tcl)
 hold on;
 plot(times{3},u(:,3));
-ylabel('U1 (Nm)',"Interpreter","latex","FontWeight","Bold")
+ylabel('U3 (Nm)',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 
 
@@ -367,19 +367,19 @@ nexttile(tcl)
 hold on;
 plot(t,s(:,4));
 plot(times{3},states{3}(:,4));
-ylabel('W1 (rad/s)',"Interpreter","latex","FontWeight","Bold")
+ylabel('W1 (Rad/s)',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 nexttile(tcl)
 hold on;
 plot(t,s(:,5));
 plot(times{3},states{3}(:,5));
-ylabel('W2 (rad/s)',"Interpreter","latex","FontWeight","Bold")
+ylabel('W2 (Rad/s)',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 nexttile(tcl)
 hold on;
 plot(t,s(:,6));
 plot(times{3},states{3}(:,6));
-ylabel('W3 (rad/s)',"Interpreter","latex","FontWeight","Bold")
+ylabel('W3 (Rad/s)',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 Lgnd = legend('Adaptive LQR', 'Lyapunov');
 Lgnd.Layout.Tile = 4;
@@ -444,7 +444,7 @@ yline(10^-5);
 ylabel('Angular Velocity Error Norm')
 xlabel('Time (s)')
 Lgnd = legend('Adaptive LQR', 'Lyapunov');
-Lgnd.Layout.Tile = 4;
+Lgnd.Layout.Tile = 3;
 
 % Plot the angular velocity of the RWs for the chosen gains
 figure(22);
@@ -459,13 +459,13 @@ nexttile(tcl)
 hold on;
 plot(t,u2(:,2)); hold on;
 plot(times{3},u(:,2));
-ylabel('U1 (Nm)',"Interpreter","latex","FontWeight","Bold")
+ylabel('U2 (Nm)',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 nexttile(tcl)
 hold on;
 plot(t,u2(:,3)); hold on;
 plot(times{3},u(:,3));
-ylabel('U1 (Nm)',"Interpreter","latex","FontWeight","Bold")
+ylabel('U3 (Nm)',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 Lgnd = legend('Adaptive LQR', 'Lyapunov');
 Lgnd.Layout.Tile = 4;
@@ -484,14 +484,14 @@ nexttile(tcl)
 hold on;
 plot(t,u2(:,2)); hold on;
 plot(times{3},u(:,2));
-ylabel('U1 (Nm)',"Interpreter","latex","FontWeight","Bold")
+ylabel('U2 (Nm)',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 xlim([0,5])
 nexttile(tcl)
 hold on;
 plot(t,u2(:,3)); hold on;
 plot(times{3},u(:,3));
-ylabel('U1 (Nm)',"Interpreter","latex","FontWeight","Bold")
+ylabel('U3 (Nm)',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 xlim([0,5])
 Lgnd = legend('Adaptive LQR', 'Lyapunov');
@@ -546,7 +546,7 @@ function [prime,u] = lin_dyn(x,J,Iw,goal)
     % Inertia matrix for RWs
     Iww = [Iw,0,0;0,Iw,0;0,0,Iw];
     % Torque calculation using LQR gains
-    u = K*x(1:6);
+    u = -K*x(1:6);
     % Angular acceleration of RWs
     ww_dot = inv(Iww)*(skew(ww)*Iww*ww+u);
     % Angular acceleration of the spacecraft
@@ -584,10 +584,10 @@ function [prime,u] = lin_dyn(x,J,Iw,goal)
 
         % Calculate linear coefficients for input variables
         B = zeros(6,3);        
-        B(4,1) = Iw_/J_(1);B(5,2) = Iw_/J_(2);B(6,3) = Iw_/J_(3);
+        B(4,1) = -J_(1)*Iw_*inv(Iw_);B(5,2) = -J_(2)*Iw_*inv(Iw_);B(6,3) = -J_(3)*Iw_*inv(Iw_);
         
         % Weights for each state variable and input
-        Q = diag([500,500,500,2,2,2]);
+        Q = diag([500,500,500,20,20,20]);
         R = diag([0.00001,0.00001,0.00001]);
         
         % Calculate gain matrix using LQR
