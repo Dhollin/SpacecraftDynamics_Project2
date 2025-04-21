@@ -279,6 +279,7 @@ s_e = [];
 w_e = [];
 u = []; K = 1000; D = diag([700,700,700]);
 J = [500,0,0;0,400,-7;0,-7,440];
+V = [];
 for i = 1:length(states{3}(:,1))
     sig = states{3}(i,1:3)';
     sig_e = ((1-norm(sig)^2)*goal - (1-norm(goal)^2)*sig + cross(2*goal,sig))...
@@ -287,6 +288,7 @@ for i = 1:length(states{3}(:,1))
     w_e(i) = norm(states{3}(i,4:6));
     w = states{3}(i,4:6)';
     u(i,:) = (-K*sig_e + D*w + skew(w)*J*w)';
+    V(i) = lyap(sig,w,J,K);
 end
 
 % Plot the angular velocity history for the chosen gains
@@ -323,6 +325,12 @@ hold on;
 plot(times{3},u(:,3));
 ylabel('U3 (Nm)',"Interpreter","latex","FontWeight","Bold")
 xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
+
+%Plot the Lyapunov function over time
+figure(30)
+plot(times{3},V);
+xlabel('Time (s)')
+ylabel('V(t)'); title('Lyapunov Function')
 
 
 %% Question 5.3
@@ -416,6 +424,7 @@ s_e2 = [];
 w_e2 = [];
 u2 = []; K = 1000; D = diag([700,700,700]);
 J = [500,0,0;0,400,-7;0,-7,440];
+V = [];
 for i = 1:length(s(:,1))
     sig = s(i,1:3)';
     sig_e = ((1-norm(sig)^2)*goal - (1-norm(goal)^2)*sig + cross(2*goal,sig))...
@@ -425,6 +434,7 @@ for i = 1:length(s(:,1))
     w = s(i,4:6)';
     [~,temp_u] = lin_dyn([sig;w;s(i,7:9)'],J,Iw,[0;0;0]);
     u2(i,:) = temp_u';
+    V(i) = lyap(sig,w,J,K);
 end
 
 % Plot the angular velocity history for the chosen gains
@@ -496,6 +506,12 @@ xlabel('Time (s)',"Interpreter","latex","FontWeight","Bold")
 xlim([0,5])
 Lgnd = legend('Adaptive LQR', 'Lyapunov');
 Lgnd.Layout.Tile = 4;
+
+%Plot the Lyapunov function over time
+figure(31)
+plot(t,V);
+xlabel('Time (s)')
+ylabel('V(t)'); title('Lyapunov Function')
 
 %% Functions
 
@@ -697,6 +713,11 @@ end
 function mrp = DCM2MRPs(DCM)
     c = sqrt(trace(DCM)+1);
     mrp = 1/(c*(c+2)) *[DCM(2,3)-DCM(3,2);DCM(3,1)-DCM(1,3);DCM(1,2)-DCM(2,1)];
+end
+
+% Calculate Lyapunov function value
+function V = lyap(sig,w,J,K)
+    V = 0.5*w'*J*w + 2*K*log(1+sig'*sig);
 end
 
 
